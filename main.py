@@ -5,7 +5,7 @@ from discord.ext import commands, tasks
 from discord.ui import Button, View
 from datetime import datetime, timedelta
 
-TOKEN = os.getenv("DISCORD_TOKEN")  # variável de ambiente no Render
+TOKEN = os.getenv("TOKEN")  # variável de ambiente no Render
 HISTORICO_FILE = "pedidos.json"
 
 intents = discord.Intents.default()
