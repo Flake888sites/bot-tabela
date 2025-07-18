@@ -2,11 +2,9 @@ import os
 import discord
 from discord.ext import commands
 from discord.ui import Button, View
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
-TOKEN = os.getenv("TOKEN")
+# Usa variável de ambiente diretamente
+TOKEN = os.environ["TOKEN"]
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -54,3 +52,4 @@ async def table(ctx):
     await ctx.send(msg, view=view)
 
 bot.run(TOKEN)
+
