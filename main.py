@@ -2,8 +2,26 @@ import os
 import discord
 from discord.ext import commands
 from discord.ui import Button, View
+from threading import Thread
+from flask import Flask
 
-TOKEN = os.environ["TOKEN"]  # precisa definir no painel do Render
+# --- Servidor Flask para manter o bot vivo no Render ---
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is running!"
+
+def run_web():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
+
+def keep_alive():
+    t = Thread(target=run_web)
+    t.start()
+
+# --- Configuração do bot Discord ---
+TOKEN = os.environ["TOKEN"]  # defina essa variável no painel do Render
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -19,7 +37,6 @@ async def on_ready():
 
 @bot.command()
 async def table(ctx):
-    # Apenas vendedores/admins podem usar o comando
     if ctx.author.id not in SELLERS_IDS:
         await ctx.send("You don't have permission to use this command.")
         return
@@ -27,7 +44,7 @@ async def table(ctx):
     button = Button(label="Make Order", style=discord.ButtonStyle.success)
 
     async def button_callback(interaction):
-        # Qualquer usuário pode clicar no botão
+        # Qualquer pessoa pode clicar
         for seller_id in SELLERS_IDS:
             seller = bot.get_user(seller_id)
             if seller:
@@ -51,4 +68,6 @@ async def table(ctx):
 
     await ctx.send(msg, view=view)
 
+# Inicia servidor Flask e depois o bot
+keep_alive()
 bot.run(TOKEN)
