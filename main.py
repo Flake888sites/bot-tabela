@@ -2,26 +2,27 @@ import os
 import discord
 from discord.ext import commands
 from discord.ui import Button, View
-from threading import Thread
 from flask import Flask
+from threading import Thread
 
-# --- Servidor Flask para manter o bot vivo no Render ---
+# === Servidor Flask para manter o bot online ===
 app = Flask(__name__)
 
-@app.route('/')
+@app.route("/")
 def home():
     return "Bot is running!"
 
-def run_web():
+def run_flask():
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
 
 def keep_alive():
-    t = Thread(target=run_web)
-    t.start()
+    thread = Thread(target=run_flask)
+    thread.daemon = True
+    thread.start()
 
-# --- Configuração do bot Discord ---
-TOKEN = os.environ["TOKEN"]  # defina essa variável no painel do Render
+# === Bot Discord ===
+TOKEN = os.environ["TOKEN"]  # Variável deve ser criada no Render
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -44,7 +45,6 @@ async def table(ctx):
     button = Button(label="Make Order", style=discord.ButtonStyle.success)
 
     async def button_callback(interaction):
-        # Qualquer pessoa pode clicar
         for seller_id in SELLERS_IDS:
             seller = bot.get_user(seller_id)
             if seller:
@@ -52,22 +52,19 @@ async def table(ctx):
                     await seller.send(f"📢 Member **{interaction.user}** wants to place an order.")
                 except Exception as e:
                     print(f"Error sending DM to {seller_id}: {e}")
-
         await interaction.response.send_message("✅ Your order request was sent to the sellers!", ephemeral=True)
 
     button.callback = button_callback
-
     view = View()
     view.add_item(button)
 
-    msg = (
+    await ctx.send(
         "**🎬 Animation Order**\n\n"
         "The price and form of the order will be discussed with the seller.\n"
-        "Click the button below to place an order:"
+        "Click the button below to place an order:",
+        view=view
     )
 
-    await ctx.send(msg, view=view)
-
-# Inicia servidor Flask e depois o bot
+# === Executar ===
 keep_alive()
 bot.run(TOKEN)
